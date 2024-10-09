@@ -9,21 +9,20 @@ import (
 )
 
 type Config struct {
-	Env    string `yaml:"env" env-default:"local"`
-	DBPath string `yaml:"db_path" env-required:"true"`
-	HTTPServer
+	Env        string `yaml:"env" env-default:"local"`
+	DBPath     string `yaml:"db_path" env-required:"true"`
+	HTTPServer `yaml:"http_server"`
 }
 
 type HTTPServer struct {
-	Addres      string        `yaml:"address" env-default:"localhost:8080"`
+	Address     string        `yaml:"address" env-default:"localhost:8080"`
 	Timeout     time.Duration `yaml:"timeout" env-default:"4s"`
 	IdleTimeout time.Duration `yaml:"idle_timeout" env-default:"60s"`
 }
 
-func MustLoad() Config {
-	configPath := os.Getenv("CONFIG_PATH")
+func MustLoad(configPath string) *Config {
 	if configPath == "" {
-		log.Fatal("CONFIG_PATH is not set")
+		log.Fatal("path to config file is not set")
 	}
 
 	//check if file exists
@@ -37,5 +36,5 @@ func MustLoad() Config {
 		log.Fatalf("cannot read config: %s", configPath)
 	}
 
-	return cfg
+	return &cfg
 }
