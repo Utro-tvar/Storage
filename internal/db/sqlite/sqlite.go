@@ -4,7 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/Utro-tvar/Storage/internal/db"
+	"github.com/mattn/go-sqlite3"
 )
 
 type Storage struct {
@@ -22,7 +23,7 @@ func New(storagePath string) (*Storage, error) {
 	stmt, err := db.Prepare(`
 	CREATE TABLE IF NOT EXISTS resources(
 		id INTEGER PRIMARY KEY,
-		name TEXT NOT NULL,
+		name TEXT NOT NULL UNIQUE,
 		type TEXT NOT NULL,
 		path TEXT NOT NULL);
 	`)
@@ -37,4 +38,23 @@ func New(storagePath string) (*Storage, error) {
 	}
 
 	return &Storage{db: db}, nil
+}
+
+func (s *Storage) Save(path string, resourseType int, name string) error {
+	const op = "db.sqlite.Save"
+
+	stmt, err := s.db.Prepare("INSERT INTO resources(name, type, path) VALUES(?, ?, ?)")
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	_, err = stmt.Exec(name, resourseType, path)
+	if err != nil {
+		if err, ok := err.(sqlite3.Error); ok && err.ExtendedCode == sqlite3.ErrConstraintUnique {
+			return fmt.Errorf("%s: %w", op, db.ErrResourceExists)
+		}
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
 }
