@@ -7,6 +7,8 @@ import (
 	"os"
 
 	"github.com/Utro-tvar/Storage/internal/config"
+	"github.com/Utro-tvar/Storage/internal/db/sqlite"
+	"github.com/Utro-tvar/Storage/internal/lib/logger/sl"
 )
 
 const (
@@ -27,7 +29,13 @@ func main() {
 	log.Info("starting storage", slog.String("env", cfg.Env))
 	log.Debug("debug messages are enabled")
 
-	_ = cfg
+	db, err := sqlite.New(cfg.DBPath)
+	if err != nil {
+		log.Error("failed to init db", sl.Err(err))
+		os.Exit(1)
+	}
+
+	_ = db
 }
 
 func setupLogger(env string) *slog.Logger {
